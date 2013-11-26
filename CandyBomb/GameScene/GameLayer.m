@@ -214,7 +214,8 @@
     }else if (_selectedTiles.count==2){
         [self exchangeSelectedCandySprites];
         [_selectedTiles removeAllObjects];
-        [self setTouchEnabled:YES];
+        CCCallFunc *lCallFunc=[CCCallFunc actionWithTarget:self selector:@selector(setTouchEnableYES)];
+        [self runAction:[CCSequence actions:[CCDelayTime actionWithDuration:kAnimationDuration],lCallFunc, nil]];
     }else{
         [self setTouchEnabled:YES];
     }
@@ -225,8 +226,9 @@
             int index=i + 7;
             if (index>=_tiles.count) {
                 CandySprite *lNewCandySprite=[CandySprite spriteWithNumber:arc4random()%6+1];
+                CandySprite *lOldCandySprite=[_tiles objectAtIndex:i];
                 lNewCandySprite.coord=ccp(i%7, i/7);
-                lNewCandySprite.position=ccp(kStartPoint.x+i%7*kSide, kStartPoint.y+i/7*kSide+kSide);
+                lNewCandySprite.position=ccpAdd(lOldCandySprite.position, ccp(0, kSide));
                 [self addChild:lNewCandySprite];
                 [_tiles replaceObjectAtIndex:i withObject:lNewCandySprite];
             }else{
@@ -247,6 +249,12 @@
     [_removeTiles removeAllObjects];
     CCCallFunc *lCallFunc=[CCCallFunc actionWithTarget:self selector:@selector(check)];
     [self runAction:[CCSequence actions:[CCDelayTime actionWithDuration:kAnimationDuration+0.1],lCallFunc, nil]];
+}
+-(void)setTouchEnableYES{
+    [self setTouchEnabled:YES];
+}
+-(void)settouchEnableNO{
+    [self setTouchEnabled:NO];
 }
 #pragma mark - Touch Event
 -(BOOL)ccTouchBegan:(UITouch *)touch withEvent:(UIEvent *)event{
