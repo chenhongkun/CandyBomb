@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "-[GameLayer checkCanFindNextEliminateCandySprite]:GameLayer.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "[lTiles objectAtIndex:value2]">
+            </PersistentString>
+            <PersistentString
+               value = "[lTiles objectAtIndex:value1]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[GameLayer checkSimulationOrientationVert:useArray:]:GameLayer.m">
+         <PersistentStrings>
+            <PersistentString
+               value = "(CandySprite *)[tiles objectAtIndex:7]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[GameLayer check]:GameLayer.m">
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>

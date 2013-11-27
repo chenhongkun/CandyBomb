@@ -31,7 +31,7 @@
         int randomValue=arc4random()%lArray.count;
         CandySprite *lCandySprite=[CandySprite spriteWithNumber:[[lArray objectAtIndex:randomValue]intValue]];
         lCandySprite.coord=ccp(x, y);
-        lCandySprite.position=ccp(kStartPoint.x+x*kSide, kStartPoint.y+y*kSide);
+        lCandySprite.position=ccp(kStartPoint.x+x*kSide, kStartPoint.y+y*kSide+kSide*7);
         [_tiles addObject:lCandySprite];
         [self addChild:lCandySprite];
         [lArray release];
@@ -46,7 +46,7 @@
         _tiles=[[NSMutableArray alloc]initWithCapacity:49];
         _selectedTiles=[[NSMutableArray alloc]initWithCapacity:2];
         _removeTiles=[[NSMutableArray alloc]init];
-        [self setTouchEnabled:YES];
+//        [self setTouchEnabled:YES];
         [self setTouchMode:kCCTouchesOneByOne];
         [self setTouchSwallow:NO];
         [self setContentSize:CGSizeMake(320, 320)];
@@ -63,6 +63,7 @@
 }
 -(void)onEnterTransitionDidFinish{
     [super onEnterTransitionDidFinish];
+    [self resetAllCandySpritePostion];
 }
 -(void)onExitTransitionDidStart{
     [super onExitTransitionDidStart];
@@ -77,6 +78,37 @@
     [super dealloc];
 }
 #pragma mark - Private Mothed
+-(void)resetMap{
+    for (CandySprite *lCandySprite in _tiles) {
+        [lCandySprite removeFromParentAndCleanup:YES];
+    }
+    [_tiles removeAllObjects];
+    [_selectedTiles removeAllObjects];
+    [_removeTiles removeAllObjects];
+    for (int i=0; i<49; i++) {
+        NSMutableArray *lArray=[[NSMutableArray alloc]initWithObjects:[NSNumber numberWithInt:1],[NSNumber numberWithInt:2],[NSNumber numberWithInt:3],[NSNumber numberWithInt:4],[NSNumber numberWithInt:5],[NSNumber numberWithInt:6], nil];
+        int x=i%7;
+        int y=i/7;
+        if (x!=0) {
+            int value=(x-1)+y*7;
+            CandySprite *lCandySprite=[_tiles objectAtIndex:value];
+            [lArray removeObject:[NSNumber numberWithInt:lCandySprite.number]];
+        }
+        if (y!=0) {
+            int value=x+(y-1)*7;
+            CandySprite *lCandySprite=[_tiles objectAtIndex:value];
+            [lArray removeObject:[NSNumber numberWithInt:lCandySprite.number]];
+        }
+        int randomValue=arc4random()%lArray.count;
+        CandySprite *lCandySprite=[CandySprite spriteWithNumber:[[lArray objectAtIndex:randomValue]intValue]];
+        lCandySprite.coord=ccp(x, y);
+        lCandySprite.position=ccp(kStartPoint.x+x*kSide, kStartPoint.y+y*kSide+kSide*7);
+        [_tiles addObject:lCandySprite];
+        [self addChild:lCandySprite];
+        [lArray release];
+    }
+    [self resetAllCandySpritePostion];
+}
 -(BOOL)checkIsAdjacent{//检查所选中的两个CandySprite是否相邻
     if (_selectedTiles.count!=2) {
         return NO;
@@ -217,7 +249,11 @@
         CCCallFunc *lCallFunc=[CCCallFunc actionWithTarget:self selector:@selector(setTouchEnableYES)];
         [self runAction:[CCSequence actions:[CCDelayTime actionWithDuration:kAnimationDuration],lCallFunc, nil]];
     }else{
-        [self setTouchEnabled:YES];
+        if ([self checkCanFindNextEliminateCandySprite]==NO) {
+            [self resetMap];
+        }else{
+            [self setTouchEnabled:YES];
+        }
     }
 }
 -(void)getNewCandySprite{//添加新的CandySprite
@@ -250,10 +286,109 @@
     CCCallFunc *lCallFunc=[CCCallFunc actionWithTarget:self selector:@selector(check)];
     [self runAction:[CCSequence actions:[CCDelayTime actionWithDuration:kAnimationDuration+0.1],lCallFunc, nil]];
 }
--(void)setTouchEnableYES{
+#pragma mark - Simulation Tiles
+-(BOOL)checkCanFindNextEliminateCandySprite{//检查是否有可以消除的CandySprite
+    NSMutableArray *lTiles=[_tiles mutableCopy];
+    for (int i=0;i<lTiles.count;i++) {
+        CandySprite *lCandySprite=[lTiles objectAtIndex:i];
+        if (lCandySprite.coord.x<6) {
+            int value1=[lTiles indexOfObject:lCandySprite];
+            int value2=value1+1;
+            CandySprite *tempCandySprite=[lTiles objectAtIndex:value2];
+            [lTiles exchangeObjectAtIndex:value1 withObjectAtIndex:value2];
+            
+            if ([self checkSimulationOrientationHori:lCandySprite.coord.y useArray:lTiles]) {
+                return YES;
+            }
+            if ([self checkSimulationOrientationHori:tempCandySprite.coord.y useArray:lTiles]) {
+                return YES;
+            }
+            if ([self checkSimulationOrientationVert:lCandySprite.coord.x useArray:lTiles]) {
+                return YES;
+            }
+            if ([self checkSimulationOrientationVert:tempCandySprite.coord.x useArray:lTiles]) {
+                return YES;
+            }
+            [lTiles exchangeObjectAtIndex:value1 withObjectAtIndex:value2];
+        }
+        if (lCandySprite.coord.y<6) {
+            int value1=[lTiles indexOfObject:lCandySprite];
+            int value2=value1+7;
+            CandySprite *tempCandySprite=[lTiles objectAtIndex:value2];
+            [lTiles exchangeObjectAtIndex:value1 withObjectAtIndex:value2];
+            if ([self checkSimulationOrientationHori:lCandySprite.coord.y useArray:lTiles]) {
+                return YES;
+            }
+            if ([self checkSimulationOrientationHori:tempCandySprite.coord.y useArray:lTiles]) {
+                return YES;
+            }
+            if ([self checkSimulationOrientationVert:lCandySprite.coord.x useArray:lTiles]) {
+                return YES;
+            }
+            if ([self checkSimulationOrientationVert:tempCandySprite.coord.x useArray:lTiles]) {
+                return YES;
+            }
+            [lTiles exchangeObjectAtIndex:value1 withObjectAtIndex:value2];
+        }
+    }
+    return NO;
+}
+-(BOOL)checkSimulationOrientationHori:(int)value useArray:(NSArray *)tiles{//模拟检查横向的CandySprite
+    NSMutableArray *lArray=[NSMutableArray arrayWithCapacity:7];
+    for (int i=7*value; i<7*value+7; i++) {
+        CandySprite *lCandySprite=[tiles objectAtIndex:i];
+        if (lArray.count==0) {
+            [lArray addObject:lCandySprite];
+        }else if(lArray.count<3){
+            CandySprite *tempCandySprite=[lArray objectAtIndex:0];
+            if (tempCandySprite.number==lCandySprite.number) {
+                [lArray addObject:lCandySprite];
+            }else{
+                [lArray removeAllObjects];
+                [lArray addObject:lCandySprite];
+            }
+        }else{
+            [lArray removeAllObjects];
+            return YES;
+        }
+    }
+    if (lArray.count>=3) {
+        [lArray removeAllObjects];
+        return YES;
+    }
+    [lArray removeAllObjects];
+    return NO;
+}
+-(BOOL)checkSimulationOrientationVert:(int)value useArray:(NSArray *)tiles{//模拟检查纵向的CandySprite
+    NSMutableArray *lArray=[NSMutableArray arrayWithCapacity:7];
+    for (int i=value; i<7*7+value; i+=7) {
+        CandySprite *lCandySprite=[tiles objectAtIndex:i];
+        if (lArray.count==0) {
+            [lArray addObject:lCandySprite];
+        }else if(lArray.count<3){
+            CandySprite *tempCandySprite=[lArray objectAtIndex:0];
+            if (tempCandySprite.number==lCandySprite.number) {
+                [lArray addObject:lCandySprite];
+            }else{
+                [lArray removeAllObjects];
+                [lArray addObject:lCandySprite];
+            }
+        }else{
+            [lArray removeAllObjects];
+            return YES;
+        }
+    }
+    if (lArray.count>=3) {
+        [lArray removeAllObjects];
+        return YES;
+    }
+    [lArray removeAllObjects];
+    return NO;
+}
+-(void)setTouchEnableYES{//启用Touch事件
     [self setTouchEnabled:YES];
 }
--(void)settouchEnableNO{
+-(void)settouchEnableNO{//关闭Touch事件
     [self setTouchEnabled:NO];
 }
 #pragma mark - Touch Event
@@ -290,12 +425,12 @@
     return NO;
 }
 -(void)ccTouchMoved:(UITouch *)touch withEvent:(UIEvent *)event{
-    NSLog(@"Move");
+//    NSLog(@"Move");
 }
 -(void)ccTouchEnded:(UITouch *)touch withEvent:(UIEvent *)event{
-    NSLog(@"End");
+//    NSLog(@"End");
 }
 -(void)ccTouchCancelled:(UITouch *)touch withEvent:(UIEvent *)event{
-    NSLog(@"Cancelled");
+//    NSLog(@"Cancelled");
 }
 @end
