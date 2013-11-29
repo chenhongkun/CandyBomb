@@ -14,6 +14,13 @@
     NSMutableArray *_selectedTiles;
     NSMutableArray *_removeTiles;
     CCSprite *_selectedSprite;
+    
+    double _hintTime;
+    double _timeTime;
+    double _bombProbability;
+    double _diamondCoins;
+    double _superTime;
+    double _connectTime;
 }
 
 @end
